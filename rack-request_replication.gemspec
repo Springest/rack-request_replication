@@ -8,9 +8,9 @@ Gem::Specification.new do |spec|
   spec.version       = Rack::RequestReplication::VERSION
   spec.authors       = ["Wouter de Vos"]
   spec.email         = ["wouter@springest.com"]
-  spec.summary       = %q{TODO: Write a short summary. Required.}
-  spec.description   = %q{TODO: Write a longer description. Optional.}
-  spec.homepage      = ""
+  spec.summary       = %q{Request replication MiddleWare for Rack.}
+  spec.description   = %q{Replicate or record HTTP requests to your Rack application and replay them elsewhere or at another time.}
+  spec.homepage      = "https://github.com/Springest/rack-request_replication"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")
