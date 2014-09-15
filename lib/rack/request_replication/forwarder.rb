@@ -18,12 +18,16 @@ module Rack
       # @param  [Hash{Symbol => Object}] options
       # @option options [String]  :host  ('localhost')
       # @option options [Integer] :port  (8080)
+      # @option options [String]  :session_key ('rack.session')
       #
       def initialize( app, options = {} )
         @app = app
         @options = {
           host: 'localhost',
-          port: 8080
+          port: 8080,
+          session_key: 'rack.session',
+          root_url: '/',
+          redis: {}
         }.merge options
       end
 
@@ -131,12 +135,27 @@ module Rack
       # @returns [URI]
       #
       def forward_uri( request )
-        url = "#{request.scheme}://#{options[:host]}"
-        url << ":#{options[:port]}" unless port_matches_scheme? request
+        url = "#{request.scheme}://#{forward_host_with_port( request )}"
         url << request.fullpath
         URI(url)
       end
 
+      def forward_host_with_port( request )
+        host = options[:host].to_s
+        host << ":#{options[:port]}" unless port_matches_scheme? request
+      end
+
+      ##
+      # Persistent Redis connection that is used
+      # to store cookies.
+      #
+      def redis
+        @redis ||= Redis.new({
+          host: 'localhost',
+          port: 6380,
+          db: 'rack-request-replication'
+        }.merge(options[:redis]))
+      end
       ##
       # Checks if the request scheme matches the destination port.
       #
