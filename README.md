@@ -12,6 +12,10 @@ running. Redis serves as a key-value store where sessions from the
 Source App are linked to sessions from the Forward App. This way both
 apps can have their own session management.
 
+## API Docs
+
+Check out the official [API docs](http://rubydoc.info/gems/rack-request_replication)
+
 ## Installation
 
 Add this line to your application's Gemfile:
