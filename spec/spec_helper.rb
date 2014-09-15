@@ -15,7 +15,6 @@ RSpec.configure do |config|
 
   config.after :suite do
     puts "Quitting example applications..."
-    #@spid.kill
     @dpid.kill
   end
 end

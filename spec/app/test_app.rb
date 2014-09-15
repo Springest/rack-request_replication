@@ -1,4 +1,5 @@
 require 'sinatra/base'
+require 'sinatra/cookies'
 require 'rack/request_replication'
 
 $destination_responses ||= []
@@ -36,9 +37,15 @@ class TestApp < Sinatra::Base
 end
 
 class DestApp < Sinatra::Base
+  helpers Sinatra::Cookies
+
   set :port, 4568
 
   enable :logging
+
+  before do
+    cookies.merge! 'boo' => 'far', 'zar' => 'bab'
+  end
 
   get '/' do
     $destination_responses << 'GET OK'

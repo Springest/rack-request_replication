@@ -2,6 +2,7 @@ require 'logger'
 require 'json'
 require 'net/http'
 require 'uri'
+require 'redis'
 
 module Rack
   module RequestReplication
@@ -58,14 +59,36 @@ module Rack
         forward_request.add_field("Accept", opts[:accept])
         forward_request.add_field("Accept-Encoding", opts[:accept_encoding])
         forward_request.add_field("Host", request.host)
-        forward_request.add_field("Cookie", opts[:cookies]) # TODO: we need to link the source session to the session on the destination app. Maybe we can use Redis to store this.
+
         Thread.new do
           begin
-            http.request(forward_request)
-          rescue
-            logger.debug "Request to Forward App failed."
+            forward_request.add_field("Cookie", cookies( request ))
+            update_cookies( request, http.request(forward_request) )
+          rescue => e
+            logger.debug "Replicating request failed with: #{e.message}"
           end
         end
+      end
+
+      def update_cookies( request, response )
+        return unless cookies_id( request )
+        cookie = response.to_hash['set-cookie'].collect{|ea|ea[/^.*?;/]}.join rescue {}
+        cookie = Hash[cookie.split(";").map{|d|d.split('=')}] rescue {}
+        redis.set( cookies_id( request), cookie )
+      end
+
+      def cookies( request )
+        return ( request.cookies || "" ) unless cookies_id( request )
+        cs = redis.get( cookies_id( request )) ||
+          request.cookies ||
+          {}
+      end
+
+      def cookies_id( request )
+        cs = request.cookies
+        sess = cs && cs[options[:session_key]]
+        sess_id = sess && sess.split("\n--").last
+        sess_id
       end
 
       def create_get_request( uri, opts = {} )
@@ -112,7 +135,6 @@ module Rack
           body
           request_method
           content_charset
-          cookies
           media_type
           media_type_params
           params
@@ -142,7 +164,8 @@ module Rack
 
       def forward_host_with_port( request )
         host = options[:host].to_s
-        host << ":#{options[:port]}" unless port_matches_scheme? request
+        host = "#{host}:#{options[:port]}" unless port_matches_scheme? request
+        host
       end
 
       ##
@@ -152,7 +175,7 @@ module Rack
       def redis
         @redis ||= Redis.new({
           host: 'localhost',
-          port: 6380,
+          port: 6379,
           db: 'rack-request-replication'
         }.merge(options[:redis]))
       end
