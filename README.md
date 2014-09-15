@@ -1,4 +1,4 @@
-# Rack::RequestReplication
+# Rack::RequestReplication - Replicate Rack app HTTP requests
 
 Replicate requests from one app instance to another. At
 [Springest](http://www.springest.com) we use this to test new features.
