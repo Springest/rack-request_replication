@@ -1,7 +1,3 @@
 require "rack/request_replication/version"
-
-module Rack
-  module RequestReplication
-    # Your code goes here...
-  end
-end
+require "rack/request_replication/logger"
+require "rack/request_replication/forwarder"
