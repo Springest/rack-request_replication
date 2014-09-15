@@ -1,6 +1,8 @@
 # Rack::RequestReplication
 
-TODO: Write a gem description
+Replicate requests from one app instance to another. At
+[Springest](http://www.springest.com) we use this to test new features.
+We replicate all live requests to our staging environment.
 
 ## Installation
 
@@ -18,7 +20,21 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+### Sinatra Example
+
+```ruby
+require 'sinatra/base'
+require 'rack/request_replication'
+
+class TestApp < Sinatra::Base
+  # Forward all requests to another app that runs on localhost, port 4568
+  use Rack::RequestReplication::Forwarder, host: 'localhost', port: 4568
+
+  get '/' do
+    'Hello World'
+  end
+end
+```
 
 ## Contributing
 
