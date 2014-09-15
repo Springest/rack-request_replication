@@ -9,7 +9,14 @@ class TestApp < Sinatra::Base
 
   enable :logging
 
-  use Rack::RequestReplication::Forwarder, port: 4568
+  use Rack::RequestReplication::Forwarder, host: 'localhost',
+        port: 4568,
+        session_key: 'rack.session',
+        redis: {
+          host: 'localhost',
+          port: 6379,
+          db: 'rack-request-replication'
+        }
 
   get '/' do
     'GET OK'
