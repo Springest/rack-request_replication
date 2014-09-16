@@ -1,16 +1,61 @@
 # Rack::RequestReplication - Replicate Rack app HTTP requests
 
 Replicate requests from one app instance to another. At
-[Springest](http://www.springest.com) we use this to test new features.
-We replicate all live requests to our staging environment to test new
-code before it goes live. With real traffic!
+[Springest](http://www.springest.com) we used
+[Gor](https://github.com/buger/gor) once to test our new Postgres stack
+vs our at that time current MySQL stack.
+We replicated all live requests to our staging environment to test new
+code before it went live. With real traffic!
 
-## Session support
+Unfortunately, we could not test everything we wanted with the
+[setup with Gor](http://devblog.springest.com/testing-big-infrastructure-changes-at-springest/).
+Stuff that relied on sessions (like
+[MySpringest](https://www.springest.com/my-springest), and course
+management through our [Admin panel](http://providers.springest.com/))
+could not be tested properly because the staging environment did not
+share sessions with the production stack.
+
+Recently, @foxycoder was asked to give a talk about these adventures at
+[Amsterdam.rb](http://www.meetup.com/Amsterdam-rb/events/206133762/).
+And while we were thinking about all the stuff that we needed to do to
+get it right with Gor, we came up with the concept of this gem.
+
+## Full control over the requests through Rack
+
+This is Rack MiddleWare. And thanks to that, we have all the information
+and handy tools available to parse and alter request data before we
+forward it to another stack.
+
+
+## Features
+
+At the moment, it just forwards the request with only a couple of
+changes:
+
+- The host and/or port to match the stack to forward to.
+- The session cookie – it stores a persistent link between the source
+  app's session and the destination app's session in Redis.
+- The CSRF token – same as the session, the destination app's
+  `authenticity_token` is persistent and used in consecutive requests.
+
+### Session support
 
 It has support for sessions. To make use of it, you need to have Redis
 running. Redis serves as a key-value store where sessions from the
 Source App are linked to sessions from the Forward App. This way both
 apps can have their own session management.
+
+### Rails's CSRF tokens
+
+Rails uses a cross site scripting defense mechanism in the form of an
+`authenticity_token` parameter. Absense of it, or modifying it between
+requests results in XSS errors. Therefore we needed to make sure these
+were properly captured and replaced by the Forwarder before sending the
+request to the other application.
+
+CSRF tokens are also persisted in Redis and used in consecutive requests, by
+updating `params["authenticity_token"]` before handing off the request
+to the replica app.
 
 ## API Docs
 

@@ -67,11 +67,66 @@ module Rack
         Thread.new do
           begin
             forward_request.add_field("Cookie", cookies( request ))
-            update_cookies( request, http.request(forward_request) )
+            update_csrf_token_and_cookies( request, http.request(forward_request) )
           rescue => e
             logger.debug "Replicating request failed with: #{e.message}"
           end
         end
+      end
+
+      ##
+      # Update CSRF token and cookies.
+      #
+      # @param   [Rack::Request] request
+      # @param   [Net::HTTP::Response] response
+      #
+      def update_csrf_token_and_cookies( request, response )
+        update_csrf_token( request, response )
+        update_cookies( request, response )
+      end
+
+      ##
+      # The CSRF-token to use.
+      #
+      # @param   [Rack::Request] request
+      # @returns [String]
+      #
+      def csrf_token( request )
+        token = request.params["authenticity_token"]
+        return if token.nil?
+
+        redis.get( "csrf-#{token}" ) || token
+      end
+
+      ##
+      # Update CSRF token to bypass XSS errors in Rails.
+      #
+      # @param   [Rack::Request] request
+      #
+      def update_csrf_token( request, response )
+        token = request.params["authenticity_token"]
+        return if token.nil?
+
+        response_token = csrf_token_from response
+        return token if response_token.nil?
+
+        redis.set "csrf-#{token}", response_token
+      end
+
+      ##
+      # Pull CSRF token from the HTML document's header.
+      #
+      # @param   [Net::HTTP::Response] response
+      # @returns [String]
+      #
+      def csrf_token_from( response )
+        response.split("\n").
+          select{|l| l.match(/csrf-token/) }.
+          first.split(" ").
+          select{|t| t.match(/^content=/)}.first.
+          match(/content="(.*)"/)[1]
+      rescue
+        nil
       end
 
       ##
@@ -234,6 +289,11 @@ module Rack
           value = request.send( m )
           replicated_options[m] = value unless value.nil?
         end
+
+        if replicated_options[:params]["authenticity_token"]
+          replicated_options[:params]["authenticity_token"] = csrf_token
+        end
+
         replicated_options
       end
 
