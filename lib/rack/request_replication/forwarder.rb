@@ -6,6 +6,8 @@ require 'redis'
 
 module Rack
   module RequestReplication
+    DEFAULT_PORTS = { 'http' => 80, 'https' => 443, 'coffee' => 80 }
+
     ##
     # This class implements forwarding of requests
     # to another host and/or port.
@@ -20,6 +22,8 @@ module Rack
       # @option options [String]                 :host  ('localhost')
       # @option options [Integer]                :port  (8080)
       # @option options [String]                 :session_key ('rack.session')
+      # @option options [Bool]                   :use_ssl (false)
+      # @option options [Bool]                   :verify_ssl (true)
       # @option options [Hash{Symbol => Object}] :redis
       #   @option redis [String]  :host ('localhost')
       #   @option redis [Integer] :port (6379)
@@ -30,6 +34,8 @@ module Rack
         @options = {
           host: 'localhost',
           port: 8080,
+          use_ssl: false,
+          verify_ssl: true,
           session_key: 'rack.session',
           root_url: '/',
           redis: {}
@@ -58,6 +64,8 @@ module Rack
         uri = forward_uri request
 
         http = Net::HTTP.new uri.host, uri.port
+        http.use_ssl = @options[:use_ssl]
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE unless @options[:verify_ssl]
 
         forward_request = send("create_#{opts[:request_method].downcase}_request", uri, opts)
         forward_request.add_field("Accept", opts[:accept])
@@ -342,7 +350,7 @@ module Rack
       # @returns [boolean]
       #
       def port_matches_scheme?( request )
-        options[:port].to_i == Rack::Request::DEFAULT_PORTS[clean_scheme(request)]
+        options[:port].to_i == DEFAULT_PORTS[clean_scheme(request)]
       end
 
       ##
