@@ -299,7 +299,7 @@ module Rack
         end
 
         if replicated_options[:params]["authenticity_token"]
-          replicated_options[:params]["authenticity_token"] = csrf_token
+          replicated_options[:params]["authenticity_token"] = csrf_token( request )
         end
 
         replicated_options
