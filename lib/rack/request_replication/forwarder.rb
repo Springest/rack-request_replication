@@ -24,6 +24,9 @@ module Rack
       # @option options [String]                 :session_key ('rack.session')
       # @option options [Bool]                   :use_ssl (false)
       # @option options [Bool]                   :verify_ssl (true)
+      # @option options [Hash{Symbol => Object}] :basic_auth
+      #   @option basic_auth [String] :user
+      #   @option basic_auth [String] :password
       # @option options [Hash{Symbol => Object}] :redis
       #   @option redis [String]  :host ('localhost')
       #   @option redis [Integer] :port (6379)
@@ -64,13 +67,17 @@ module Rack
         uri = forward_uri request
 
         http = Net::HTTP.new uri.host, uri.port
-        http.use_ssl = @options[:use_ssl]
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE unless @options[:verify_ssl]
+        http.use_ssl = options[:use_ssl]
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE unless options[:verify_ssl]
 
         forward_request = send("create_#{opts[:request_method].downcase}_request", uri, opts)
         forward_request.add_field("Accept", opts[:accept])
         forward_request.add_field("Accept-Encoding", opts[:accept_encoding])
         forward_request.add_field("Host", request.host)
+
+        if options[:basic_auth]
+          forward_request.basic_auth options[:basic_auth][:user], options[:basic_auth][:password]
+        end
 
         Thread.new do
           begin
