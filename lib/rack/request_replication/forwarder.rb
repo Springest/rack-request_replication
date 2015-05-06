@@ -280,6 +280,19 @@ module Rack
       end
 
       ##
+      # Prepare a PROPFIND request to the forward app.
+      #
+      # The passed in options hash is ignored.
+      #
+      # @param   [URI] uri
+      # @param   [Hash{Symbol => Object}] opts ({})
+      # @returns [Net:HTTP::Options]
+      #
+      def create_propfind_request( uri, opts = {} )
+        Net::HTTP::Propfind.new uri.request_uri
+      end
+
+      ##
       # Replicates all the options and data that was in
       # the original request and puts them in a Hash.
       #
