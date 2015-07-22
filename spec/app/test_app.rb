@@ -23,15 +23,15 @@ class TestApp < Sinatra::Base
   end
 
   post '/' do
-    'POST OK'
+    request.params.to_s
   end
 
   put '/' do
-    'PUT OK'
+    request.params.to_s
   end
 
   patch '/' do
-    'PATCH OK'
+    request.params.to_s
   end
 
   delete '/' do
@@ -60,17 +60,17 @@ class DestApp < Sinatra::Base
   end
 
   post '/' do
-    $destination_responses << 'POST OK'
+    $destination_responses << request.params.to_s
     'Created!'
   end
 
   put '/' do
-    $destination_responses << 'PUT OK'
+    $destination_responses << request.params.to_s
     'Replaced!'
   end
 
   patch '/' do
-    $destination_responses << 'PATCH OK'
+    $destination_responses << request.params.to_s
     'Updated'
   end
 

@@ -38,21 +38,29 @@ describe Rack::RequestReplication::Forwarder do
   end
 
   describe 'a POST request' do
-    before { post '/', foo: 'bar' }
+    it 'posts correct parameters along parameters' do
+      post '/', foo: 'bar'
+      expect(destination_response).to eq "{\"foo\"=>\"bar\"}"
+    end
 
-    it { expect(last_response.body).to eq destination_response }
+    it "works with nested parameters" do
+      post '/', foo: { bar: 'buz' }
+      expect(destination_response).to eq "{\"foo\"=>{\"bar\"=>\"buz\"}}"
+    end
   end
 
   describe 'a PUT request' do
-    before { put '/', foo: 'bar' }
-
-    it { expect(last_response.body).to eq destination_response }
+    it 'posts correct parameters along parameters' do
+      put '/', foo: { bar: 'buz' }
+      expect(destination_response).to eq "{\"foo\"=>{\"bar\"=>\"buz\"}}"
+    end
   end
 
   describe 'a PATCH request' do
-    before { patch '/', foo: 'bar' }
-
-    it { expect(last_response.body).to eq destination_response }
+    it 'posts correct parameters along parameters' do
+      patch '/', foo: { bar: 'buz' }
+      expect(destination_response).to eq "{\"foo\"=>{\"bar\"=>\"buz\"}}"
+    end
   end
 
   describe 'a DELETE request' do
