@@ -3,6 +3,7 @@ require 'json'
 require 'net/http'
 require 'uri'
 require 'redis'
+require 'active_support/core_ext/hash/conversions'
 
 module Rack
   module RequestReplication
@@ -215,9 +216,9 @@ module Rack
       # @param   [Hash{Symbol => Object}] opts ({})
       # @returns [Net:HTTP::Post]
       #
-      def create_post_request( uri, opts = {} )
-        forward_request = Net::HTTP::Post.new uri.request_uri
-        forward_request.set_form_data opts[:params]
+      def create_post_request(uri, opts = {})
+        forward_request = Net::HTTP::Post.new(uri.request_uri)
+        forward_request.body = opts[:params].to_query
         forward_request
       end
 
@@ -231,9 +232,9 @@ module Rack
       # @param   [Hash{Symbol => Object}] opts ({})
       # @returns [Net:HTTP::Put]
       #
-      def create_put_request( uri, opts = {} )
-        forward_request = Net::HTTP::Put.new uri.request_uri
-        forward_request.set_form_data opts[:params]
+      def create_put_request(uri, opts = {})
+        forward_request = Net::HTTP::Put.new(uri.request_uri)
+        forward_request.body = opts[:params].to_query
         forward_request
       end
 
@@ -247,9 +248,9 @@ module Rack
       # @param   [Hash{Symbol => Object}] opts ({})
       # @returns [Net:HTTP::Patch]
       #
-      def create_patch_request( uri, opts = {} )
-        forward_request = Net::HTTP::Patch.new uri.request_uri
-        forward_request.set_form_data opts[:params]
+      def create_patch_request(uri, opts = {})
+        forward_request = Net::HTTP::Patch.new(uri.request_uri)
+        forward_request.body = opts[:params].to_query
         forward_request
       end
 
