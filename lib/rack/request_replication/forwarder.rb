@@ -33,7 +33,7 @@ module Rack
       #   @option redis [Integer] :port (6379)
       #   @option redis [String]  :db   ('rack-request-replication')
       #
-      def initialize( app, options = {} )
+      def initialize(app, options = {})
         @app = app
         @options = {
           host: 'localhost',
@@ -43,7 +43,7 @@ module Rack
           session_key: 'rack.session',
           root_url: '/',
           redis: {}
-        }.merge options
+        }.merge(options)
       end
 
       ##
@@ -51,10 +51,10 @@ module Rack
       # @return [Array(Integer, Hash, #each)]
       # @see    http://rack.rubyforge.org/doc/SPEC.html
       #
-      def call( env )
-        request = Rack::Request.new env
-        replicate request
-        app.call env
+      def call(env)
+        request = Rack::Request.new(env)
+        replicate(request)
+        app.call(env)
       end
 
       ##
@@ -63,11 +63,11 @@ module Rack
       #
       # @param  [Rack::Request] request
       #
-      def replicate( request )
-        opts = replicate_options_and_data request
-        uri = forward_uri request
+      def replicate(request)
+        opts = replicate_options_and_data(request)
+        uri = forward_uri(request)
 
-        http = Net::HTTP.new uri.host, uri.port
+        http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = options[:use_ssl]
         http.verify_mode = OpenSSL::SSL::VERIFY_NONE unless options[:verify_ssl]
 
@@ -82,8 +82,8 @@ module Rack
 
         Thread.new do
           begin
-            forward_request.add_field("Cookie", cookies( request ))
-            update_csrf_token_and_cookies( request, http.request(forward_request) )
+            forward_request.add_field("Cookie", cookies(request))
+            update_csrf_token_and_cookies(request, http.request(forward_request))
           rescue => e
             logger.debug "Replicating request failed with: #{e.message}"
           end
@@ -96,9 +96,9 @@ module Rack
       # @param   [Rack::Request] request
       # @param   [Net::HTTP::Response] response
       #
-      def update_csrf_token_and_cookies( request, response )
-        update_csrf_token( request, response )
-        update_cookies( request, response )
+      def update_csrf_token_and_cookies(request, response)
+        update_csrf_token(request, response)
+        update_cookies(request, response)
       end
 
       ##
@@ -107,11 +107,11 @@ module Rack
       # @param   [Rack::Request] request
       # @returns [String]
       #
-      def csrf_token( request )
+      def csrf_token(request)
         token = request.params["authenticity_token"]
         return if token.nil?
 
-        redis.get( "csrf-#{token}" ) || token
+        redis.get("csrf-#{token}") || token
       end
 
       ##
@@ -119,7 +119,7 @@ module Rack
       #
       # @param   [Rack::Request] request
       #
-      def update_csrf_token( request, response )
+      def update_csrf_token(request, response)
         token = request.params["authenticity_token"]
         return if token.nil?
 
@@ -135,7 +135,7 @@ module Rack
       # @param   [Net::HTTP::Response] response
       # @returns [String]
       #
-      def csrf_token_from( response )
+      def csrf_token_from(response)
         response.split("\n").
           select{|l| l.match(/csrf-token/) }.
           first.split(" ").
@@ -153,11 +153,11 @@ module Rack
       # @param [Rack::Request] request
       # @param [Net::HTTP::Response] response
       #
-      def update_cookies( request, response )
-        return unless cookies_id( request )
-        cookie = response.to_hash['set-cookie'].collect{|ea|ea[/^.*?;/]}.join rescue {}
-        cookie = Hash[cookie.split(";").map{|d|d.split('=')}] rescue {}
-        redis.set( cookies_id( request), cookie )
+      def update_cookies(request, response)
+        return unless cookies_id(request)
+        cookie = response.to_hash['set-cookie'].collect{ |ea|ea[/^.*?;/] }.join rescue {}
+        cookie = Hash[cookie.split(";").map{ |d|d.split('=') }] rescue {}
+        redis.set(cookies_id(request), cookie)
       end
 
       ##
@@ -170,11 +170,9 @@ module Rack
       # @param   [Rack::Request] request
       # @returns [Hash]
       #
-      def cookies( request )
-        return ( request.cookies || "" ) unless cookies_id( request )
-        redis.get( cookies_id( request )) ||
-          request.cookies ||
-          {}
+      def cookies(request)
+        return (request.cookies || "") unless cookies_id(request)
+        redis.get(cookies_id(request)) || request.cookies || {}
       end
 
       ##
@@ -186,11 +184,11 @@ module Rack
       # @param   [Rack::Request] request
       # @returns [String]
       #
-      def cookies_id( request )
+      def cookies_id(request)
         cs = request.cookies
-        sess = cs && cs[options[:session_key]]
-        sess_id = sess && sess.split("\n--").last
-        sess_id
+        session = cs && cs[options[:session_key]]
+        session_id = session && session.split("\n--").last
+        session_id
       end
 
       ##
@@ -202,8 +200,8 @@ module Rack
       # @param   [Hash{Symbol => Object}] opts ({})
       # @returns [Net:HTTP::Get]
       #
-      def create_get_request( uri, opts = {} )
-        Net::HTTP::Get.new uri.request_uri
+      def create_get_request(uri, opts = {})
+        Net::HTTP::Get.new(uri.request_uri)
       end
 
       ##
@@ -263,8 +261,8 @@ module Rack
       # @param   [Hash{Symbol => Object}] opts ({})
       # @returns [Net:HTTP::Delete]
       #
-      def create_delete_request( uri, opts = {} )
-        Net::HTTP::Delete.new uri.request_uri
+      def create_delete_request(uri, opts = {})
+        Net::HTTP::Delete.new(uri.request_uri)
       end
 
       ##
@@ -276,8 +274,8 @@ module Rack
       # @param   [Hash{Symbol => Object}] opts ({})
       # @returns [Net:HTTP::Options]
       #
-      def create_options_request( uri, opts = {} )
-        Net::HTTP::Options.new uri.request_uri
+      def create_options_request(uri, opts = {})
+        Net::HTTP::Options.new(uri.request_uri)
       end
 
       ##
@@ -289,8 +287,8 @@ module Rack
       # @param   [Hash{Symbol => Object}] opts ({})
       # @returns [Net:HTTP::Options]
       #
-      def create_propfind_request( uri, opts = {} )
-        Net::HTTP::Propfind.new uri.request_uri
+      def create_propfind_request(uri, opts = {})
+        Net::HTTP::Propfind.new(uri.request_uri)
       end
 
       ##
@@ -300,7 +298,7 @@ module Rack
       # @param   [Rack::Request] request
       # @returns [Hash]
       #
-      def replicate_options_and_data( request )
+      def replicate_options_and_data(request)
         replicated_options ||= {}
         %w(
           accept_encoding
@@ -315,12 +313,12 @@ module Rack
           user_agent
           url
         ).map(&:to_sym).each do |m|
-          value = request.send( m )
+          value = request.send(m)
           replicated_options[m] = value unless value.nil?
         end
 
         if replicated_options[:params]["authenticity_token"]
-          replicated_options[:params]["authenticity_token"] = csrf_token( request )
+          replicated_options[:params]["authenticity_token"] = csrf_token(request)
         end
 
         replicated_options
@@ -333,8 +331,8 @@ module Rack
       # @param   [Rack::Request] request
       # @returns [URI]
       #
-      def forward_uri( request )
-        url = "#{request.scheme}://#{forward_host_with_port( request )}"
+      def forward_uri(request)
+        url = "#{request.scheme}://#{forward_host_with_port(request)}"
         url << request.fullpath
         URI(url)
       end
@@ -346,9 +344,9 @@ module Rack
       # @param   [Rack::Request] request
       # @returns [String]
       #
-      def forward_host_with_port( request )
+      def forward_host_with_port(request)
         host = options[:host].to_s
-        host = "#{host}:#{options[:port]}" unless port_matches_scheme? request
+        host = "#{host}:#{options[:port]}" unless port_matches_scheme?(request)
         host
       end
 
@@ -370,7 +368,7 @@ module Rack
       # @param   [Rack::Request] request
       # @returns [boolean]
       #
-      def port_matches_scheme?( request )
+      def port_matches_scheme?(request)
         options[:port].to_i == DEFAULT_PORTS[clean_scheme(request)]
       end
 
@@ -380,7 +378,7 @@ module Rack
       # @param   [Rack::Request] request
       # @returns [String]
       #
-      def clean_scheme( request )
+      def clean_scheme(request)
         request.scheme.match(/^\w+/)[0]
       end
 
