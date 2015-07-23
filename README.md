@@ -1,5 +1,7 @@
 # Rack::RequestReplication - Replicate Rack app HTTP requests
 
+![Build Status](https://travis-ci.org/Springest/rack-request_replication.svg)
+
 Replicate requests from one app instance to another. At
 [Springest](http://www.springest.com) we used
 [Gor](https://github.com/buger/gor) once to test our new Postgres stack
@@ -101,6 +103,17 @@ class TestApp < Sinatra::Base
   end
 end
 ```
+
+## Supported Ruby Versions
+
+We currently support the following Ruby versions:
+
+ - 1.9.3
+ - 2.1.6
+ - 2.2.2
+ - jruby (latest)
+
+Please note that Rubinious is currently not supported.
 
 ## Contributing
 
