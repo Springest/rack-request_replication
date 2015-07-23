@@ -6,7 +6,7 @@ require 'rack/request_replication/version'
 Gem::Specification.new do |spec|
   spec.name          = 'rack-request_replication'
   spec.version       = Rack::RequestReplication::VERSION
-  spec.authors       = ['Wouter de Vos']
+  spec.authors       = ['Wouter de Vos', 'Mark Mulder']
   spec.email         = ['wouter@springest.com']
   spec.summary       = %q{Request replication MiddleWare for Rack.}
   spec.description   = %q{Replicate or record HTTP requests to your Rack application and replay them elsewhere or at another time.}
