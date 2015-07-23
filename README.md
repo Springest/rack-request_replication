@@ -1,6 +1,6 @@
 # Rack::RequestReplication - Replicate Rack app HTTP requests
 
-![Build Status](https://travis-ci.org/Springest/rack-request_replication.svg)
+[![Build Status](https://travis-ci.org/Springest/rack-request_replication.svg?branch=master)](https://travis-ci.org/Springest/rack-request_replication)
 
 Replicate requests from one app instance to another. At
 [Springest](http://www.springest.com) we used
