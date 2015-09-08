@@ -8,6 +8,7 @@ require 'active_support/core_ext/hash/conversions'
 module Rack
   module RequestReplication
     DEFAULT_PORTS = { 'http' => 80, 'https' => 443, 'coffee' => 80 }
+    VALID_REQUEST_METHODS = %w(head get post put patch propfind delete options trace)
 
     ##
     # This class implements forwarding of requests
@@ -66,6 +67,8 @@ module Rack
       def replicate(request)
         opts = replicate_options_and_data(request)
         uri = forward_uri(request)
+
+        return unless VALID_REQUEST_METHODS.include?(opts[:request_method].downcase)
 
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = options[:use_ssl]
@@ -285,10 +288,36 @@ module Rack
       #
       # @param   [URI] uri
       # @param   [Hash{Symbol => Object}] opts ({})
-      # @returns [Net:HTTP::Options]
+      # @returns [Net:HTTP::Propfind]
       #
       def create_propfind_request(uri, opts = {})
         Net::HTTP::Propfind.new(uri.request_uri)
+      end
+
+      ##
+      # Prepare a TRACE request to the forward app.
+      #
+      # The passed in options hash is ignored.
+      #
+      # @param   [URI] uri
+      # @param   [Hash{Symbol => Object}] opts ({})
+      # @returns [Net:HTTP::Trace]
+      #
+      def create_trace_request(uri, opts = {})
+        Net::HTTP::Trace.new(uri.request_uri)
+      end
+
+      ##
+      # Prepare a HEAD request to the forward app.
+      #
+      # The passed in options hash is ignored.
+      #
+      # @param   [URI] uri
+      # @param   [Hash{Symbol => Object}] opts ({})
+      # @returns [Net:HTTP::Head]
+      #
+      def create_head_request(uri, opts = {})
+        Net::HTTP::Head.new(uri.request_uri)
       end
 
       ##
