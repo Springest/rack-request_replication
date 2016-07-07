@@ -3,7 +3,6 @@ require 'json'
 require 'net/http'
 require 'uri'
 require 'redis'
-require 'active_support/core_ext/hash/conversions'
 
 module Rack
   module RequestReplication
@@ -219,7 +218,7 @@ module Rack
       #
       def create_post_request(uri, opts = {})
         forward_request = Net::HTTP::Post.new(uri.request_uri)
-        forward_request.body = opts[:params].to_query
+        forward_request.body = Rack::Utils.build_nested_query(opts[:params])
         forward_request
       end
 
@@ -235,7 +234,7 @@ module Rack
       #
       def create_put_request(uri, opts = {})
         forward_request = Net::HTTP::Put.new(uri.request_uri)
-        forward_request.body = opts[:params].to_query
+        forward_request.body = Rack::Utils.build_nested_query(opts[:params])
         forward_request
       end
 
@@ -251,7 +250,7 @@ module Rack
       #
       def create_patch_request(uri, opts = {})
         forward_request = Net::HTTP::Patch.new(uri.request_uri)
-        forward_request.body = opts[:params].to_query
+        forward_request.body = Rack::Utils.build_nested_query(opts[:params])
         forward_request
       end
 
