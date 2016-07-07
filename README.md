@@ -10,7 +10,7 @@ We replicated all live requests to our staging environment to test new
 code before it went live. With real traffic!
 
 Unfortunately, we could not test everything we wanted with the
-[setup with Gor](http://devblog.springest.com/testing-big-infrastructure-changes-at-springest/).
+[setup with Gor](http://devblog.springest.com/testing-big-infrastructure-changes-at-springest).
 Stuff that relied on sessions (like
 [MySpringest](https://www.springest.com/my-springest), and course
 management through our [Admin panel](http://providers.springest.com/))
